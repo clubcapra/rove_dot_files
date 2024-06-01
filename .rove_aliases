@@ -1,0 +1,97 @@
+# Paths
+
+# SHELL extension
+case $SHELL in
+*/zsh)
+    SHELL_EXT=".zsh"
+    ;;
+*/bash)
+    SHELL_EXT=".bash"
+    ;;
+*)
+    echo Unsupported shell
+    exit 0
+esac
+
+# ROS devel
+ROS_DEVEL="humble"
+
+# ROS path
+ROS_SETUP_PATH="/opt/ros/$ROS_DEVEL/setup$SHELL_EXT"
+
+# SSD path
+SSD_PATH="/media/SSD/stable"
+
+# Rove workspace path
+ROVE_WS_PATH="$SSD_PATH/rove"
+
+# Rove paths
+ROVE_SRC_PATH="$ROVE_WS_PATH/src"
+ROVE_INSTALL_PATH="$ROVE_WS_PATH/install"
+ROVE_BUILD_PATH="$ROVE_WS_PATH/build"
+ROVE_SETUP_PATH="$ROVE_INSTALL_PATH/setup$SHELL_EXT"
+
+# Sourcing
+if [[ -f "$ROVE_SETUP_PATH" ]]; then
+    echo $ROVE_SETUP_PATH detected!
+    . $ROVE_SETUP_PATH
+    echo $ROVE_SETUP_PATH sourced!
+else
+    echo $ROVE_SETUP_PATH not found!
+    . $ROS_SETUP_PATH
+    echo Sourced $ROS_SETUP_PATH instead!
+    echo Dont forget to rovesrc after you rovebuild
+fi
+
+# Load auto complete
+eval "$(register-python-argcomplete3 ros2)"
+eval "$(register-python-argcomplete3 colcon)"
+#eval "$(register-python-argcomplete3 rosdeps)"
+eval "$(register-python-argcomplete3 rosdep)"
+source /usr/share/vcstool-completion/vcs.zsh
+
+echo Use rovehelp for a list of aliases!
+
+# ======== Aliases ========
+
+# -------- CD commands --------
+
+# CD to the workspace (also corresponds to the root of the Rove repo)
+alias rovecdws="cd $ROVE_WS_PATH; echo 'Changed directory to $ROVE_WS_PATH'"
+
+# CD to the src directory
+alias rovecdsrc="cd $ROVE_SRC_PATH; echo 'CHANGED directory to $ROVE_SRC_PATH'"
+
+# -------- Build commands --------
+
+# Build the rove workspace (will cd to $ROVE_WS_PATH)
+alias rovebuild="rovecdws; echo 'Building rove'; colcon build --symlink-install"
+
+# Clean the install and build directories
+alias roveclean="echo 'Deleting $ROVE_BUILD_PATH'; rm -rf $ROVE_BUILD_PATH; echo 'Done'; echo 'Deleting $ROVE_INSTALL_PATH'; rm -rf $ROVE_INSTALL_PATH; echo 'Done'"
+
+# Clean and build
+alias roverebuild="roveclean; rovebuild"
+
+# -------- Utilities --------
+
+# Import VCS
+alias rovevcs="rovecdws; echo 'Importing vcs'; vcs import src < rove.repos; echo 'Done'"
+
+# Install roves deps (using rosdep)
+alias rovedep="rovecd; echo 'Installing deps'; rosdep install --from-paths src --ignore-src --rosdistro $ROS_DEVEL -r -y; echo 'Done'"
+
+# Source rove workspace
+alias rovesrc="echo 'Sourcing $ROVE_SETUP_PATH'; . $ROVE_SETUP_PATH; echo 'Done'; eval '$(register-python-argcomplete3 ros2)'; eval '$(register-python-argcomplete3 colcon)'; eval '$(register-python-argcomplete3 rosdeps)'; eval '$(register-python-argcomplete3 rosdep)'"
+
+# Is gazebo being annoying?
+alias gazebohelp="echo 'Did you try sudo apt remove gztools && sudo apt install gztools... Perhaps it is now sudo apt remove gz-tools2 && sudo apt install gz-tools2 for some reason...'"
+
+# When youre having that bad of a day, or just cuz you feel like it...
+alias fckgazebo="sudo apt remove '^.*libgz.*$' '^.*gzharmonic.*$' '^.*gz-.*$' '^.*gazebo.*$'; gazebohelp"
+
+# Show help
+alias rovehelp="sed -n '/Aliases/,/end/p;/end/q' <~/.rove_aliases"
+
+
+# end
